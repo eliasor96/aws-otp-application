@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  aws-otp-application
+
+Transform: AWS::Serverless-2016-10-31
+
+# Shared configuration for all resources, more in
+# https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Runtime: nodejs10.x
+    MemorySize: 1024
+    Timeout: 60
+    Environment:
+      Variables:
+        SentPasswordsTable:
+          Ref: sentPasswords
+
+Resources:
+
+  sentPasswords:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: "PHONE"
+        AttributeType: "S"
+      KeySchema:
+      - AttributeName: "PHONE"
+        KeyType: HASH
+      ProvisionedThroughput: 
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      TableName: "SENT_PASSWORDS"
+      TimeToLiveSpecification:
+        AttributeName: "EXPIRATION_TIME"
+        Enabled: true
+
+  send:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs10.x
+      CodeUri: ./
+      Handler: src/handlers/send.handler
+      FunctionName: "send-otp"
+      Role:
+        Ref: sendOtpRole
+      Environment:
+        Variables:
+          SenderID: "Otp service"
+      Description: Send OTP to provided phone number.
+
+  verify:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs10.x
+      CodeUri: ./
+      Handler: src/handlers/verify.handler
+      FunctionName: "verify-otp"
+      Role:
+        Ref: verifyOtpRole
+      Description: Verifies OTP for provided phone number.
+  
+  sendOtpRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: "writeSentPasswordsPolicy"
+          PolicyDocument:
+            Statement:
+              - Sid: LambdaDynamoDbWritePermissions
+                Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                Resource:
+                  - Ref: sentPasswords
+        - PolicyName: "sendOtpPolicy"
+          PolicyDocument:
+            Statement:
+              - Sid: LambdaSnsPublishPermissions
+                Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: 
+                  - "*"
+        - PolicyName: "denyAllSnsPublishPolicy"
+          PolicyDocument:
+            Statement:
+              - Sid: LambdaDenySnsPublishPermissions
+                Effect: Deny
+                Action:
+                  - sns:Publish
+                Resource: 
+                  - "arn:aws:sns:*:*:*"
+
+  verifyOtpRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: "readSentPasswordsLambdaPolicy"
+          PolicyDocument:
+            Statement:
+              - Sid: LambdaDynamoDbReadPermissions
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                Resource:
+                  - Ref: sentPasswords

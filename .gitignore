@@ -1,0 +1,4 @@
+node_modules
+.aws
+.vscode
+*.DS_Store

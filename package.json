@@ -1,0 +1,14 @@
+{
+    "name": "aws-otp-application",
+    "description": "Serverless Mobile-OTP application",
+    "version": "1.0.0",
+    "dependencies": {
+        "aws-sdk": "^2.713.0"
+    },
+    "devDependencies": {
+        "jest": "^24.7.1"
+    },
+    "scripts": {
+        "test": "jest"
+    }
+}
