@@ -1,4 +1,5 @@
 node_modules
-.aws
+.aws*
 .vscode
 *.DS_Store
+samconfig.toml

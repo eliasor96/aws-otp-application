@@ -42,8 +42,7 @@ Resources:
       CodeUri: ./
       Handler: src/handlers/send.handler
       FunctionName: "send-otp"
-      Role:
-        Ref: sendOtpRole
+      Role: !GetAtt sendOtpRole.Arn
       Environment:
         Variables:
           SenderID: "Otp service"
@@ -56,8 +55,7 @@ Resources:
       CodeUri: ./
       Handler: src/handlers/verify.handler
       FunctionName: "verify-otp"
-      Role:
-        Ref: verifyOtpRole
+      Role: !GetAtt verifyOtpRole.Arn
       Description: Verifies OTP for provided phone number.
   
   sendOtpRole:
@@ -80,7 +78,7 @@ Resources:
                 Action:
                   - dynamodb:PutItem
                 Resource:
-                  - Ref: sentPasswords
+                  - !GetAtt sentPasswords.Arn
         - PolicyName: "sendOtpPolicy"
           PolicyDocument:
             Statement:
@@ -120,4 +118,4 @@ Resources:
                 Action:
                   - dynamodb:GetItem
                 Resource:
-                  - Ref: sentPasswords
+                  - !GetAtt sentPasswords.Arn
