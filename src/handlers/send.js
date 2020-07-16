@@ -1,8 +1,8 @@
 const AWS = require('aws-sdk');
-var ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10', region: 'us-east-1' });
+const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10', region: 'us-east-1' });
 const sns = new AWS.SNS({ region: 'us-east-1' });
 
-const sentPasswordsTable = process.env.SentPasswordsTable;
+const sentPasswordsTable = process.env.SENT_PASSWORDS_TABLE;
 const EXPIRATION_TIME_SECONDS = 60;
 
 const generatePassword = () => {
@@ -10,7 +10,7 @@ const generatePassword = () => {
 };
 
 const logPassword = async (password, phone) => {
-    var putPrams = {
+    const putPrams = {
         TableName: sentPasswordsTable,
         Item: {
             'PHONE': phone,
@@ -31,7 +31,7 @@ exports.handler = async (event) => {
         MessageAttributes: {
             'AWS.SNS.SMS.SenderID': {
                 DataType: 'String',
-                StringValue: process.env.SenderID
+                StringValue: process.env.SENDER_ID
             },
             'AWS.SNS.SMS.SMSType': {
                 DataType: 'String',
@@ -39,4 +39,5 @@ exports.handler = async (event) => {
             }
         }
     }).promise();
+    return otp;
 };

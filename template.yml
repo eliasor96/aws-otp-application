@@ -13,8 +13,7 @@ Globals:
     Timeout: 60
     Environment:
       Variables:
-        SentPasswordsTable:
-          Ref: sentPasswords
+        SENT_PASSWORDS_TABLE: "SENT_PASSWORDS"
 
 Resources:
 
@@ -45,7 +44,7 @@ Resources:
       Role: !GetAtt sendOtpRole.Arn
       Environment:
         Variables:
-          SenderID: "Otp service"
+          SENDER_ID: "OtpService"
       Description: Send OTP to provided phone number.
 
   verify:
