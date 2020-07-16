@@ -21,8 +21,16 @@ const logPassword = async (password, phone) => {
     await ddb.put(putPrams).promise();
 };
 
+const isNumberOptedOut = async (number) => {
+    const response = await sns.checkIfPhoneNumberIsOptedOut({
+        phoneNumber: number
+    }).promise();
+    return response.isOptedOut;
+};
+
 exports.handler = async (event) => {
     if (!event.number) throw Error('No number provided');
+    if (await isNumberOptedOut(event.number)) throw Error('Number opted out');
     const otp = generatePassword();
     await logPassword(otp, event.number);
     await sns.publish({
